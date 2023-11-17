@@ -7,10 +7,10 @@ example (a b c : ℝ) : a * b * c = b * (a * c) := by
 
 -- Try these.
 example (a b c : ℝ) : c * b * a = b * (a * c) := by
-  sorry
+  rw [← mul_assoc, mul_comm, ← mul_assoc, mul_comm, ← mul_assoc]
 
 example (a b c : ℝ) : a * (b * c) = b * (a * c) := by
-  sorry
+  rw [mul_comm b c, ← mul_assoc, mul_comm]
 
 -- An example.
 example (a b c : ℝ) : a * b * c = b * c * a := by
@@ -33,10 +33,15 @@ example (a b c d e f : ℝ) (h : a * b = c * d) (h' : e = f) : a * (b * e) = c *
   rw [mul_assoc]
 
 example (a b c d e f : ℝ) (h : b * c = e * f) : a * b * c * d = a * e * f * d := by
-  sorry
+  rw [mul_comm, mul_assoc, h]
+  simp only [mul_comm, mul_assoc, mul_left_comm]
 
 example (a b c d : ℝ) (hyp : c = b * a - d) (hyp' : d = a * b) : c = 0 := by
-  sorry
+  rw [mul_comm] at hyp
+  symm at hyp'
+  rw [hyp'] at hyp
+  ring_nf at hyp
+  exact hyp
 
 example (a b c d e f : ℝ) (h : a * b = c * d) (h' : e = f) : a * (b * e) = c * (d * f) := by
   rw [h', ← mul_assoc, h, mul_assoc]
@@ -97,10 +102,13 @@ section
 variable (a b c d : ℝ)
 
 example : (a + b) * (c + d) = a * c + a * d + b * c + b * d := by
-  sorry
+  rw [mul_add, add_mul, add_mul]
+  repeat rw [← add_assoc]
+  rw [add_assoc (a*c) (b*c), add_comm (b*c) (a*d)]
+  repeat rw [← add_assoc]
 
 example (a b : ℝ) : (a + b) * (a - b) = a ^ 2 - b ^ 2 := by
-  sorry
+  ring
 
 #check pow_two a
 #check mul_sub a b c
