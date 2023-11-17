@@ -137,18 +137,25 @@ variable {G : Type*} [Group G]
 
 namespace MyGroup
 
--- theorem mul_inv_inv (a : G) : a⁻¹⁻¹ = a := by
---  rw [← one_mul a⁻¹⁻¹, ← mul_left_inv a  ]
+
+theorem inv_mul_cancel_left (a b : G) : a⁻¹ * (a * b) = b := by
+  rw [← mul_assoc, mul_left_inv, one_mul]
 
 theorem mul_right_inv (a : G) : a * a⁻¹ = 1 := by
-  --rw [← mul_left_inv a⁻¹]
-  sorry
+  nth_rw 1 [← one_mul a]
+  nth_rw 1 [← mul_left_inv a⁻¹ ]
+  rw [mul_assoc, mul_assoc, ← mul_assoc a⁻¹, mul_left_inv, one_mul, mul_left_inv]
+
 
 theorem mul_one (a : G) : a * 1 = a := by
-  sorry
+  rw [← mul_left_inv a, ← mul_assoc, mul_right_inv, one_mul]
 
 theorem mul_inv_rev (a b : G) : (a * b)⁻¹ = b⁻¹ * a⁻¹ := by
-  sorry
+  rw [← mul_one (a*b)⁻¹ , ← mul_right_inv a]
+  nth_rw 2 [ ← mul_one (a)]
+  rw [← mul_right_inv b]
+  repeat rw [← mul_assoc]
+  rw [mul_assoc (a*b)⁻¹ a b, mul_left_inv, one_mul]
 
 end MyGroup
 
