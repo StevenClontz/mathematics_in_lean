@@ -69,38 +69,61 @@ example (h : a ≤ b) (h' : f b < f a) : ¬Monotone f := by
   exact h'
 
 example : ¬∀ {f : ℝ → ℝ}, Monotone f → ∀ {a b}, f a ≤ f b → a ≤ b := by
-  intro h
-  let f := fun x : ℝ ↦ (0 : ℝ)
-  have monof : Monotone f := by
-    intro _ _ _
+  push_neg
+  let f := fun _ : ℝ ↦ (0 : ℝ)
+  use f
+  constructor
+  · rw [Monotone]
+    intro a b
+    intro _
     dsimp
     apply le_refl
-  have h' : f 1 ≤ f 0 := le_refl _
-  have : f 1 ≤ f 0 → 1 ≤ 0 := by
-    sorry
-  have : 1 ≤ 0 := by
-    sorry
-  linarith
+  · use 1
+    use 0
+    dsimp
+    constructor <;> linarith
 
 example (x : ℝ) (h : ∀ ε > 0, x < ε) : x ≤ 0 := by
-  sorry
-
+  apply le_of_not_gt
+  intro x_gt_0
+  let ε := x/2
+  have : ε > 0  := by
+    dsimp
+    linarith
+  have : x < x/2 := by
+    apply h ε
+    apply this
+  linarith
 end
 
 section
 variable {α : Type*} (P : α → Prop) (Q : Prop)
 
 example (h : ¬∃ x, P x) : ∀ x, ¬P x := by
-  sorry
+  intro x Px
+  apply h
+  use x
 
 example (h : ∀ x, ¬P x) : ¬∃ x, P x := by
-  sorry
+  intro exists_x_Px
+  rcases exists_x_Px with ⟨ x, Px⟩
+  apply h x
+  exact Px
 
 example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
-  sorry
+  by_contra not_exists_x_Px
+  apply h
+  intro x
+  by_contra not_Px
+  apply not_exists_x_Px
+  use x
 
 example (h : ∃ x, ¬P x) : ¬∀ x, P x := by
-  sorry
+  intro all_x_Px
+  rcases h with ⟨ x, not_Px⟩
+  apply not_Px
+  apply all_x_Px x
+
 
 example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
   by_contra h'
@@ -110,11 +133,15 @@ example (h : ¬∀ x, P x) : ∃ x, ¬P x := by
   by_contra h''
   exact h' ⟨x, h''⟩
 
-example (h : ¬¬Q) : Q := by
-  sorry
+example (not_not_Q : ¬¬Q) : Q := by
+  by_contra not_Q
+  apply not_not_Q
+  exact not_Q
 
 example (h : Q) : ¬¬Q := by
-  sorry
+  by_contra not_Q
+  apply not_Q
+  exact h
 
 end
 
@@ -122,7 +149,18 @@ section
 variable (f : ℝ → ℝ)
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
-  sorry
+  intro a
+  by_contra no_x_fx_gt_a
+  apply h
+  rw [FnHasUb]
+  use a
+  rw [FnUb]
+  intro x
+  by_contra not_fx_lt_a
+  apply no_x_fx_gt_a
+  use x
+  linarith
+
 
 example (h : ¬∀ a, ∃ x, f x > a) : FnHasUb f := by
   push_neg at h
@@ -134,7 +172,9 @@ example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   exact h
 
 example (h : ¬Monotone f) : ∃ x y, x ≤ y ∧ f y < f x := by
-  sorry
+  dsimp [Monotone] at h
+  push_neg at h
+  exact h
 
 example (h : ¬FnHasUb f) : ∀ a, ∃ x, f x > a := by
   contrapose! h
