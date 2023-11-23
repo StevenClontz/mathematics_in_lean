@@ -209,4 +209,16 @@ example (P : Prop) : ¬¬P → P := by
   contradiction
 
 example (P Q : Prop) : P → Q ↔ ¬P ∨ Q := by
-  sorry
+  constructor
+  · intro h
+    by_cases p : P
+    · right
+      apply h p
+    · left
+      assumption
+  · intro h
+    rcases h with g | g
+    · intro p
+      contradiction
+    · intro _
+      apply g
