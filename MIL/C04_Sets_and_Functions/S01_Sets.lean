@@ -24,11 +24,8 @@ example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u := by
   intro x xsu
   exact ⟨h xsu.1, xsu.2⟩
 
-theorem foo (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
-  fun x ⟨xs, xu⟩ ↦ ⟨h xs, xu⟩
-
 example (h : s ⊆ t) : s ∩ u ⊆ t ∩ u :=
-  fun x ⟨xs, xu⟩ ↦ ⟨h xs, xu⟩
+  fun _ ⟨xs, xu⟩ ↦ ⟨h xs, xu⟩
 
 example : s ∩ (t ∪ u) ⊆ s ∩ t ∪ s ∩ u := by
   intro x hx
@@ -47,8 +44,25 @@ example : s ∩ (t ∪ u) ⊆ s ∩ t ∪ s ∩ u := by
   · left; exact ⟨xs, xt⟩
   . right; exact ⟨xs, xu⟩
 
+
 example : s ∩ t ∪ s ∩ u ⊆ s ∩ (t ∪ u) := by
-  sorry
+  intro x h
+  rcases h with xst | xsu
+  · have xs : x∈ s := xst.1
+    constructor
+    · exact xs
+    · left
+      apply xst.right
+  · have xs: x∈ s := xsu.1
+    constructor
+    · exact xs
+    · right
+      apply xsu.right
+
+
+
+
+
 example : (s \ t) \ u ⊆ s \ (t ∪ u) := by
   intro x xstu
   have xs : x ∈ s := xstu.1.1
@@ -68,7 +82,22 @@ example : (s \ t) \ u ⊆ s \ (t ∪ u) := by
   rintro (xt | xu) <;> contradiction
 
 example : s \ (t ∪ u) ⊆ (s \ t) \ u := by
-  sorry
+  intro x x_in_s_not_tuu
+  have x_in_s : x∈ s := x_in_s_not_tuu.1
+  have x_not_in_tuu : x∉t∪u := x_in_s_not_tuu.2
+  have x_not_in_t : x∉t := by
+    sorry
+  have x_not_in_u : x∉u := by
+    sorry
+  constructor
+  · constructor
+    · exact x_in_s
+    · exact x_not_in_t
+  · exact x_not_in_u
+
+
+
+
 example : s ∩ t = t ∩ s := by
   ext x
   simp only [mem_inter_iff]
@@ -82,7 +111,7 @@ example : s ∩ t = t ∩ s :=
 example : s ∩ t = t ∩ s := by ext x; simp [and_comm]
 
 example : s ∩ t = t ∩ s := by
-  apply Subset.antisymm
+  apply Subset.antisym\m
   · rintro x ⟨xs, xt⟩; exact ⟨xt, xs⟩
   . rintro x ⟨xt, xs⟩; exact ⟨xs, xt⟩
 
@@ -239,4 +268,3 @@ example : ⋂₀ s = ⋂ t ∈ s, t := by
   rfl
 
 end
-
