@@ -6,15 +6,51 @@ open Set Filter Topology
 def principal {α : Type*} (s : Set α) : Filter α
     where
   sets := { t | s ⊆ t }
-  univ_sets := sorry
-  sets_of_superset := sorry
-  inter_sets := sorry
+  univ_sets := by
+    have : s ⊆ univ := by
+      simp
+    apply this
+  sets_of_superset := by
+    intro x y x_in_set x_subset_y
+    have : s ⊆ x := by apply x_in_set
+    have : s ⊆ y := by
+      apply Subset.trans this x_subset_y
+    apply this
+  inter_sets := by
+    intro x y x_in_set y_in_set
+    have : s ⊆ x := by apply x_in_set
+    have : s ⊆ y := by apply y_in_set
+    have : s ⊆ x ∩ y := by
+      simp; constructor <;> assumption
+    apply this
 
-example : Filter ℕ :=
-  { sets := { s | ∃ a, ∀ b, a ≤ b → b ∈ s }
-    univ_sets := sorry
-    sets_of_superset := sorry
-    inter_sets := sorry }
+
+example : Filter ℕ where
+    sets := { s | ∃ a, ∀ b, a ≤ b → b ∈ s }
+    univ_sets := by simp
+    sets_of_superset := by
+      intro x y x_in_set x_subset_y
+      simp
+      rcases x_in_set with ⟨ N, h ⟩
+      use N
+      intro b
+      intro g
+      apply x_subset_y
+      apply h
+      apply g
+    inter_sets := by
+      intro x₁ x₂ x₁_in_set x₂_in_set
+      simp
+      rcases x₁_in_set with ⟨ N₁ , h₁  ⟩
+      rcases x₂_in_set with ⟨ N₂  , h₂  ⟩
+      use N₁+N₂
+      intro b
+      intro h
+      constructor
+      · apply h₁
+        linarith
+      · apply h₂
+        linarith
 
 def Tendsto₁ {X Y : Type*} (f : X → Y) (F : Filter X) (G : Filter Y) :=
   ∀ V ∈ G, f ⁻¹' V ∈ F
@@ -32,9 +68,21 @@ example {X Y : Type*} (f : X → Y) (F : Filter X) (G : Filter Y) :
   (@Filter.map_map :
     ∀ {α β γ} {f : Filter α} {m : α → β} {m' : β → γ}, map m' (map m f) = map (m' ∘ m) f)
 
-example {X Y Z : Type*} {F : Filter X} {G : Filter Y} {H : Filter Z} {f : X → Y} {g : Y → Z}
-    (hf : Tendsto₁ f F G) (hg : Tendsto₁ g G H) : Tendsto₁ (g ∘ f) F H :=
-  sorry
+example
+  {X Y Z : Type*}
+  {F : Filter X} {G : Filter Y} {H : Filter Z}
+  {f : X → Y} {g : Y → Z}
+  (hf : Tendsto₂  f F G) (hg : Tendsto₂  g G H) : Tendsto₂  (g ∘ f) F H
+:= by
+  rw [Tendsto₂]
+  have : map (g ∘ f) F = map g (map f F) := by
+    apply @Filter.map_map
+  rw [this]
+  have : map g (map f F) ≤ map g G := by
+    apply @Filter.map_mono
+    apply hf
+  apply le_trans this hg
+
 
 variable (f : ℝ → ℝ) (x₀ y₀ : ℝ)
 
@@ -54,10 +102,33 @@ example : 𝓝 (x₀, y₀) = 𝓝 x₀ ×ˢ 𝓝 y₀ :=
 
 #check le_inf_iff
 
-example (f : ℕ → ℝ × ℝ) (x₀ y₀ : ℝ) :
-    Tendsto f atTop (𝓝 (x₀, y₀)) ↔
-      Tendsto (Prod.fst ∘ f) atTop (𝓝 x₀) ∧ Tendsto (Prod.snd ∘ f) atTop (𝓝 y₀) :=
-  sorry
+example
+  (f : ℕ → ℝ × ℝ) (x₀ y₀ : ℝ) :
+  Tendsto f atTop (𝓝 (x₀, y₀)) ↔
+  Tendsto (Prod.fst ∘ f) atTop (𝓝 x₀) ∧ Tendsto (Prod.snd ∘ f) atTop (𝓝 y₀)
+:= by
+  rw [nhds_prod_eq]
+  repeat rw [Tendsto]
+  repeat rw [← map_map]
+  constructor
+  · intro h
+    constructor
+    · have : map Prod.fst (map f atTop) ≤ map Prod.fst (𝓝 x₀ ×ˢ 𝓝 y₀) := by
+        apply @Filter.map_mono
+        apply h
+      apply le_trans this
+      simp
+    · have : map Prod.snd (map f atTop) ≤ map Prod.snd (𝓝 x₀ ×ˢ 𝓝 y₀) := by
+        apply @Filter.map_mono
+        apply h
+      apply le_trans this
+      simp
+  · intro h
+    sorry
+
+
+
+
 
 example (x₀ : ℝ) : HasBasis (𝓝 x₀) (fun ε : ℝ ↦ 0 < ε) fun ε ↦ Ioo (x₀ - ε) (x₀ + ε) :=
   nhds_basis_Ioo_pos x₀
@@ -99,7 +170,11 @@ example (P Q R : ℕ → Prop) (hP : ∀ᶠ n in atTop, P n) (hQ : ∀ᶠ n in a
 #check le_principal_iff
 #check neBot_of_le
 
-example (u : ℕ → ℝ) (M : Set ℝ) (x : ℝ) (hux : Tendsto u atTop (𝓝 x))
-    (huM : ∀ᶠ n in atTop, u n ∈ M) : x ∈ closure M :=
+example
+  (u : ℕ → ℝ) (M : Set ℝ) (x : ℝ)
+  (hux : Tendsto u atTop (𝓝 x))
+  (huM : ∀ᶠ n in atTop, u n ∈ M) :
+  x ∈ closure M
+:= by
+  rw [mem_closure_iff_clusterPt]
   sorry
-
