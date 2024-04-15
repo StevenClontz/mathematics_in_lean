@@ -34,13 +34,30 @@ example : s ⊆ f ⁻¹' (f '' s) := by
   use x, xs
 
 example : f '' s ⊆ v ↔ s ⊆ f ⁻¹' v := by
-  sorry
+  simp
+
+
+
+
 
 example (h : Injective f) : f ⁻¹' (f '' s) ⊆ s := by
-  sorry
+  intro x x_in_inv_img
+  rw [image, preimage] at x_in_inv_img
+  simp at x_in_inv_img
+  rcases x_in_inv_img with ⟨ a, a_in_s, fa_eq_fx⟩
+  have a_eq_x : a = x := h fa_eq_fx
+  rw [← a_eq_x]
+  exact a_in_s
+
 
 example : f '' (f ⁻¹' u) ⊆ u := by
-  sorry
+  intro x x_in_img_inv
+  rw [preimage, image] at x_in_img_inv
+  simp at x_in_img_inv
+  rcases x_in_img_inv with ⟨ a, fa_in_u, fa_eq_x ⟩
+  rw [← fa_eq_x]
+  exact fa_in_u
+
 
 example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
   sorry
@@ -84,7 +101,17 @@ example : (f '' ⋃ i, A i) = ⋃ i, f '' A i := by
   sorry
 
 example : (f '' ⋂ i, A i) ⊆ ⋂ i, f '' A i := by
-  sorry
+  -- intro y; simp
+  -- intro x h fxeq i
+  -- use x
+  -- exact ⟨h i, fxeq⟩
+  intro y
+  simp
+  intro x h₁ h₂ i
+  use x
+  constructor
+  · apply h₁
+  · exact h₂
 
 example (i : I) (injf : Injective f) : (⋂ i, f '' A i) ⊆ f '' ⋂ i, A i := by
   sorry
@@ -123,16 +150,50 @@ example : range exp = { y | y > 0 } := by
   rw [exp_log ypos]
 
 example : InjOn sqrt { x | x ≥ 0 } := by
-  sorry
+  rw [InjOn]
+  simp
+  intro x zero_le_x y zero_le_y sqrts_eq
+  calc
+    x = (sqrt x) ^ 2 := by rw [sq_sqrt zero_le_x]
+    _ = (sqrt y) ^ 2 := by rw [sqrts_eq]
+    _ = y := by rw [sq_sqrt zero_le_y]
+
 
 example : InjOn (fun x ↦ x ^ 2) { x : ℝ | x ≥ 0 } := by
-  sorry
+  rw [InjOn]
+  simp
+  intro x zero_le_x y zero_le_y sqs_eq
+  calc
+    x = sqrt (x ^ 2) := by rw [sqrt_sq zero_le_x]
+    _ = sqrt (y ^ 2) := by rw [sqs_eq]
+    _ = y := by rw [sqrt_sq zero_le_y]
 
 example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
-  sorry
+  ext y; constructor
+  · intro y_in_sqrt_img
+    simp
+    simp at y_in_sqrt_img
+    rcases y_in_sqrt_img with ⟨ x, _, sqrt_x_eq_y⟩
+    have : 0 ≤ sqrt x := sqrt_nonneg x
+    linarith
+  · simp
+    intro zero_le_y
+    use y^2
+    constructor
+    · apply pow_nonneg
+      exact zero_le_y
+    · apply sqrt_sq zero_le_y
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
-  sorry
+  ext y; constructor
+  · simp
+    intro x x_sq_eq_y
+    have : 0 ≤ x ^ 2 := by apply sq_nonneg
+    linarith
+  · simp
+    intro zero_le_y
+    use sqrt y
+    exact sq_sqrt zero_le_y
 
 end
 
@@ -163,11 +224,35 @@ variable (f : α → β)
 
 open Function
 
-example : Injective f ↔ LeftInverse (inverse f) f :=
-  sorry
+example : Injective f ↔ LeftInverse (inverse f) f := by
+  constructor
+  · intro g a
+    apply g
+    apply inverse_spec
+    use a
+  · intro g x y fx_eq_fy
+    rw [LeftInverse] at g
+    have : inverse f (f x) = x := by apply g
+    rw [← this]
+    have : inverse f (f y) = y := by apply g
+    rw [← this]
+    rw [fx_eq_fy]
 
-example : Surjective f ↔ RightInverse (inverse f) f :=
-  sorry
+
+
+example : Surjective f ↔ RightInverse (inverse f) f := by
+  constructor
+  · intro g a
+    rw [Surjective] at g
+    have : ∃x, f x = a := by apply g
+    rcases this with ⟨ x, fx_eq_a ⟩
+    rw [← fx_eq_a]
+    apply inverse_spec
+    use x
+  · intro g a
+    rw [Function.RightInverse, LeftInverse] at g
+    use inverse f a
+    apply g
 
 end
 
@@ -178,16 +263,18 @@ open Function
 theorem Cantor : ∀ f : α → Set α, ¬Surjective f := by
   intro f surjf
   let S := { i | i ∉ f i }
+  rw [Surjective] at surjf
   rcases surjf S with ⟨j, h⟩
-  have h₁ : j ∉ f j := by
-    intro h'
-    have : j ∉ f j := by rwa [h] at h'
+  have j_not_in_S : j ∉ S := by
+    intro j_in_S
+    have : j ∉ f j := by apply j_in_S
+    have : j ∈ f j := by
+      rw [← h] at j_in_S
+      exact j_in_S
     contradiction
-  have h₂ : j ∈ S
-  sorry
-  have h₃ : j ∉ S
-  sorry
+  have j_in_S : j ∈ S := by
+    rw [← h] at j_not_in_S
+    apply j_not_in_S
   contradiction
 
--- COMMENTS: TODO: improve this
 end

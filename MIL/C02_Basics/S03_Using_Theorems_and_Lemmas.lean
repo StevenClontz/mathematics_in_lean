@@ -44,7 +44,13 @@ example (x : ℝ) : x ≤ x :=
 
 -- Try this.
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
-  sorry
+  apply lt_of_le_of_lt
+  · apply h₀
+  · apply lt_trans
+    · apply h₁
+    · apply lt_of_le_of_lt
+      · apply h₂
+      · apply h₃
 
 example (h₀ : a ≤ b) (h₁ : b < c) (h₂ : c ≤ d) (h₃ : d < e) : a < e := by
   linarith
@@ -86,21 +92,47 @@ example (h₀ : a ≤ b) (h₁ : c < d) : a + exp c + e < b + exp d + e := by
     apply exp_lt_exp.mpr h₁
   apply le_refl
 
-example (h₀ : d ≤ e) : c + exp (a + d) ≤ c + exp (a + e) := by sorry
+example (h₀ : d ≤ e) : c + exp (a + d) ≤ c + exp (a + e) := by
+  apply add_le_add_left
+  · apply exp_le_exp.2
+    apply add_le_add_left
+    exact h₀
 
 example : (0 : ℝ) < 1 := by norm_num
 
 example (h : a ≤ b) : log (1 + exp a) ≤ log (1 + exp b) := by
-  have h₀ : 0 < 1 + exp a := by sorry
-  apply log_le_log h₀
-  sorry
+  have h₀ : 0 < 1 + exp a := by
+    have foo : (0 : ℝ ) < 1 := by
+      norm_num
+    have bar : (0 : ℝ ) < exp a := by
+      apply exp_pos
+    have baz : (0 : ℝ ) + 0 < 1 + exp a := by
+      apply add_lt_add foo bar
+    rw [add_zero] at baz
+    exact baz
+  have h₁ : 0 < 1 + exp b := by
+    have foo : (0 : ℝ ) < 1 := by
+      norm_num
+    have bar : (0 : ℝ ) < exp b := by
+      apply exp_pos
+    have baz : (0 : ℝ ) + 0 < 1 + exp b := by
+      apply add_lt_add foo bar
+    rw [add_zero] at baz
+    exact baz
+  apply (log_le_log h₀ h₁).mpr
+  rw [← exp_le_exp] at h
+  apply (add_le_add_left)
+  exact h
 
 example : 0 ≤ a ^ 2 := by
-  -- apply?
+-- apply?
   exact sq_nonneg a
 
 example (h : a ≤ b) : c - exp b ≤ c - exp a := by
-  sorry
+  refine sub_le_sub_left ?h c
+  apply exp_le_exp.mpr
+  exact h
+
 
 example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
   have h : 0 ≤ a ^ 2 - 2 * a * b + b ^ 2
@@ -113,7 +145,8 @@ example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
     _ ≤ 2 * a * b + (a ^ 2 - 2 * a * b + b ^ 2) := add_le_add (le_refl _) h
     _ = a ^ 2 + b ^ 2 := by ring
 
-example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
+
+theorem important_thing : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
   have h : 0 ≤ a ^ 2 - 2 * a * b + b ^ 2
   calc
     a ^ 2 - 2 * a * b + b ^ 2 = (a - b) ^ 2 := by ring
@@ -121,7 +154,17 @@ example : 2 * a * b ≤ a ^ 2 + b ^ 2 := by
   linarith
 
 example : |a * b| ≤ (a ^ 2 + b ^ 2) / 2 := by
-  sorry
+  have foo : a * b ≤ (a^2 + b^2)/2 := by
+    have bar : 2 * a * b ≤ a ^ 2 + b ^ 2 := by apply important_thing
+    linarith [bar]
+  have h : 0 ≤ a ^ 2 + 2 * a * b + b ^ 2
+  calc
+    a ^ 2 + 2 * a * b + b ^ 2 = (a + b) ^ 2 := by ring
+    _ ≥ 0 := by apply pow_two_nonneg
+  have bar : -(a * b) ≤ (a^2 + b^2)/2 := by linarith
+  apply abs_le'.mpr
+  constructor
+  · exact foo
+  · exact bar
 
 #check abs_le'.mpr
-

@@ -20,6 +20,8 @@ variable (x y z : α)
 example : x < y ↔ x ≤ y ∧ x ≠ y :=
   lt_iff_le_and_ne
 
+#check (lt_iff_le_and_ne : x < y ↔ x ≤ y ∧ x ≠ y)
+
 end
 
 section
@@ -35,42 +37,60 @@ variable (x y z : α)
 #check (le_sup_right : y ≤ x ⊔ y)
 #check (sup_le : x ≤ z → y ≤ z → x ⊔ y ≤ z)
 
-example : x ⊓ y = y ⊓ x := by
-  sorry
+theorem my_inf_comm : x ⊓ y = y ⊓ x := by
+  have h : ∀ x y : α, x ⊓ y ≤ y ⊓ x := by
+    intro x y
+    apply le_inf
+    apply inf_le_right
+    apply inf_le_left
+  apply le_antisymm
+  repeat apply h
 
 example : x ⊓ y ⊓ z = x ⊓ (y ⊓ z) := by
-  sorry
+  have h : ∀ x y z : α, x ⊓ y ⊓ z ≤ x ⊓ (y ⊓ z) := by
+    intro x y z
+    apply le_inf
+    apply le_trans inf_le_left
+    apply le_trans inf_le_left
+    apply le_refl
+    apply le_inf
+    apply le_trans inf_le_left
+    apply inf_le_right
+    apply inf_le_right
+  apply le_antisymm
+  apply h
+  rw [
+    inf_comm,
+    my_inf_comm (x ⊓ y) z,
+    my_inf_comm y z,
+    my_inf_comm x y
+  ]
+  apply h
 
-example : x ⊔ y = y ⊔ x := by
-  sorry
+example : x ⊔ y = y ⊔ x := sup_comm --ok i get it...
 
-example : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := by
-  sorry
+theorem my_sup_assoc : x ⊔ y ⊔ z = x ⊔ (y ⊔ z) := sup_assoc
 
 theorem absorb1 : x ⊓ (x ⊔ y) = x := by
-  sorry
+  apply le_antisymm
+  apply inf_le_left
+  apply le_inf
+  apply le_refl
+  apply le_sup_left
 
-theorem absorb2 : x ⊔ x ⊓ y = x := by
-  sorry
+theorem absorb2 : x ⊔ x ⊓ y = x := sup_inf_self
 
-end
-
-section
-variable {α : Type*} [DistribLattice α]
-variable (x y z : α)
-
-#check (inf_sup_left : x ⊓ (y ⊔ z) = x ⊓ y ⊔ x ⊓ z)
-#check (inf_sup_right : (x ⊔ y) ⊓ z = x ⊓ z ⊔ y ⊓ z)
-#check (sup_inf_left : x ⊔ y ⊓ z = (x ⊔ y) ⊓ (x ⊔ z))
-#check (sup_inf_right : x ⊓ y ⊔ z = (x ⊔ z) ⊓ (y ⊔ z))
-end
-
-section
-variable {α : Type*} [Lattice α]
 variable (a b c : α)
 
 example (h : ∀ x y z : α, x ⊓ (y ⊔ z) = x ⊓ y ⊔ x ⊓ z) : a ⊔ b ⊓ c = (a ⊔ b) ⊓ (a ⊔ c) := by
   sorry
+
+
+
+
+
+
+
 
 example (h : ∀ x y z : α, x ⊔ y ⊓ z = (x ⊔ y) ⊓ (x ⊔ z)) : a ⊓ (b ⊔ c) = a ⊓ b ⊔ a ⊓ c := by
   sorry
@@ -106,7 +126,9 @@ variable (x y z : X)
 #check (dist_triangle x y z : dist x z ≤ dist x y + dist y z)
 
 example (x y : X) : 0 ≤ dist x y := by
-  sorry
-
+  have g: 0 ≤ dist x y + dist y x := by
+    rewrite [← dist_self x]
+    apply dist_triangle
+  rewrite [dist_comm y x] at g
+  linarith
 end
-

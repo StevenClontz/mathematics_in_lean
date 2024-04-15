@@ -19,10 +19,10 @@ example {a : ℝ} (h : 1 < a) : a < a * a := by
   · rw [one_mul]
   exact lt_trans zero_lt_one h
 
-theorem convergesTo_const (a : ℝ) : ConvergesTo (fun x : ℕ ↦ a) a := by
+theorem convergesTo_const (a : ℝ) : ConvergesTo (fun _ : ℕ ↦ a) a := by
   intro ε εpos
   use 0
-  intro n nge
+  intro n _
   rw [sub_self, abs_zero]
   apply εpos
 
@@ -34,8 +34,33 @@ theorem convergesTo_add {s t : ℕ → ℝ} {a b : ℝ}
   have ε2pos : 0 < ε / 2 := by linarith
   rcases cs (ε / 2) ε2pos with ⟨Ns, hs⟩
   rcases ct (ε / 2) ε2pos with ⟨Nt, ht⟩
-  use max Ns Nt
-  sorry
+  let N := max Ns Nt
+  use N
+  have N_ge_Ns : N ≥ Ns := by
+    rw [ge_iff_le]
+    dsimp
+    apply le_max_left
+  have N_ge_Nt : N ≥ Nt := by
+    rw [ge_iff_le]
+    dsimp
+    apply le_max_right
+  intro n
+  intro _
+  have : |s n - a| < ε / 2 := by
+    apply hs
+    linarith
+  have : |t n - b| < ε / 2 := by
+    apply ht
+    linarith
+  have : |s n + t n - (a + b)| ≤  |s n - a| + |t n - b| := by
+    have : |(s n - a) + (t n - b)| ≤  |s n - a| + |t n - b| := by
+      apply abs_add
+    have rwthis : (s n - a) + (t n - b) = s n + t n - (a + b) := by ring
+    rw [← rwthis]
+    apply this
+  linarith
+
+
 
 theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : ConvergesTo s a) :
     ConvergesTo (fun n ↦ c * s n) (c * a) := by
@@ -46,13 +71,33 @@ theorem convergesTo_mul_const {s : ℕ → ℝ} {a : ℝ} (c : ℝ) (cs : Conver
     rw [h]
     ring
   have acpos : 0 < |c| := abs_pos.mpr h
+  rw [ConvergesTo]
+  intro ε εpos
+  rw [ConvergesTo] at cs
+  have ε_div_c_pos : ε / |c| > 0 := by
+    sorry
+  rcases cs (ε / |c|) ε_div_c_pos with ⟨N, h⟩
+  use N
+  intro n
+  intro n_big
+  have : |s n - a| < ε / |c| := by
+    sorry
   sorry
+
+
 
 theorem exists_abs_le_of_convergesTo {s : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) :
     ∃ N b, ∀ n, N ≤ n → |s n| < b := by
   rcases cs 1 zero_lt_one with ⟨N, h⟩
   use N, |a| + 1
-  sorry
+  intro n
+  intro n_big
+  have : |s n - a| < 1 := by
+    apply h
+    apply n_big
+  have : |s n| - |a| ≤  |s n - a| := by
+    apply abs_sub_abs_le_abs_sub
+  linarith
 
 theorem aux {s t : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) (ct : ConvergesTo t 0) :
     ConvergesTo (fun n ↦ s n * t n) 0 := by
@@ -62,6 +107,20 @@ theorem aux {s t : ℕ → ℝ} {a : ℝ} (cs : ConvergesTo s a) (ct : Converges
   have Bpos : 0 < B := lt_of_le_of_lt (abs_nonneg _) (h₀ N₀ (le_refl _))
   have pos₀ : ε / B > 0 := div_pos εpos Bpos
   rcases ct _ pos₀ with ⟨N₁, h₁⟩
+  let N := N₀ + N₁
+  use N
+  intro n n_big
+  have n_big₀ : n ≥  N₀ := by sorry
+  have n_big₁ : n ≥  N₁ := by sorry
+  ring_nf
+  ring_nf at h₁
+  rw [abs_mul]
+  have : |s n| < B := by
+    apply h₀
+    apply n_big₀
+  have : |t n| < ε * B⁻¹ := by
+    apply h₁
+    apply n_big₁
   sorry
 
 theorem convergesTo_mul {s t : ℕ → ℝ} {a b : ℝ}
@@ -100,4 +159,3 @@ def ConvergesTo' (s : α → ℝ) (a : ℝ) :=
   ∀ ε > 0, ∃ N, ∀ n ≥ N, |s n - a| < ε
 
 end
-
