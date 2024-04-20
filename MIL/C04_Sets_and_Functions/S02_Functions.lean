@@ -193,11 +193,27 @@ example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
     simp
     simp at h
     rcases h with ⟨ y, g⟩
-    sorry
-  sorry
+    rw [← g.2]
+    exact sqrt_nonneg y
+  · intro h
+    simp; simp at h
+    use x^2
+    constructor
+    · exact sq_nonneg x
+    · exact sqrt_sq h
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
-  sorry
+  ext x
+  constructor
+  · intro h
+    simp; simp at h
+    rcases h with ⟨ y, g⟩
+    rw [← g]
+    exact sq_nonneg y
+  · intro h
+    simp; simp at h
+    use sqrt x
+    exact sq_sqrt h
 
 end
 
@@ -228,11 +244,29 @@ variable (f : α → β)
 
 open Function
 
-example : Injective f ↔ LeftInverse (inverse f) f :=
-  sorry
+example : Injective f ↔ LeftInverse (inverse f) f := by
+  constructor
+  · intro g x
+    have h : ∃ y, f y = f x := by
+      use x
+    rw [inverse, dif_pos h]
+    apply g
+    apply Classical.choose_spec h
+  · intro g x y k
+    rw [← g x, ← g y, k]
 
-example : Surjective f ↔ RightInverse (inverse f) f :=
-  sorry
+example : Surjective f ↔ RightInverse (inverse f) f := by
+  constructor
+  · intro g x
+    rw [Surjective] at g
+    rw [inverse]
+    have k: ∃ a, f a = x := by
+      exact g x
+    rw [dif_pos k]
+    apply Classical.choose_spec k
+  · intro g x
+    use inverse f x
+    exact g x
 
 end
 
@@ -248,10 +282,8 @@ theorem Cantor : ∀ f : α → Set α, ¬Surjective f := by
     intro h'
     have : j ∉ f j := by rwa [h] at h'
     contradiction
-  have h₂ : j ∈ S
-  sorry
-  have h₃ : j ∉ S
-  sorry
+  have h₂ : j ∈ S := h₁
+  rw [← h] at h₂
   contradiction
 
 -- COMMENTS: TODO: improve this
