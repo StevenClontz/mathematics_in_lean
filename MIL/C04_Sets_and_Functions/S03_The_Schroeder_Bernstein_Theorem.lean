@@ -28,10 +28,14 @@ theorem sb_right_inv {x : α} (hx : x ∉ sbSet f g) : g (invFun g x) = x := by
     rw [sbSet, mem_iUnion]
     use 0
     rw [sbAux, mem_diff]
-    sorry
+    exact ⟨ trivial, hx ⟩
   have : ∃ y, g y = x := by
-    sorry
-  sorry
+    simp at this
+    assumption
+  rcases this with ⟨ y, h⟩
+  apply invFun_eq
+  use y
+
 
 theorem sb_injective (hf : Injective f) : Injective (sbFun f g) := by
   set A := sbSet f g with A_def
@@ -50,15 +54,32 @@ theorem sb_injective (hf : Injective f) : Injective (sbFun f g) := by
       rw [if_pos x₁A, if_neg x₂nA] at hxeq
       rw [A_def, sbSet, mem_iUnion] at x₁A
       have x₂eq : x₂ = g (f x₁) := by
-        sorry
+        rw [hxeq]
+        rw [A_def] at x₂nA
+        apply sb_right_inv at x₂nA
+        rw [x₂nA]
       rcases x₁A with ⟨n, hn⟩
       rw [A_def, sbSet, mem_iUnion]
       use n + 1
       simp [sbAux]
       exact ⟨x₁, hn, x₂eq.symm⟩
-    sorry
-  push_neg  at xA
-  sorry
+    rw [if_pos x₁A, if_pos x₂A] at hxeq
+    exact hf hxeq
+  · push_neg at xA
+    rw [if_neg xA.1, if_neg xA.2] at hxeq
+    have done : g (invFun g x₁) = g (invFun g x₂) := by
+      rw [hxeq]
+    rw [A_def] at xA
+    have : g (invFun g x₁) = x₁ := by
+      apply sb_right_inv f
+      exact xA.1
+    rw [← this]
+    have : g (invFun g x₂) = x₂ := by
+      apply sb_right_inv f
+      exact xA.2
+    rw [← this]
+    exact done
+
 
 theorem sb_surjective (hf : Injective f) (hg : Injective g) : Surjective (sbFun f g) := by
   set A := sbSet f g with A_def
