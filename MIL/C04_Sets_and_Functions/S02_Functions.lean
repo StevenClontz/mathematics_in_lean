@@ -34,28 +34,72 @@ example : s ⊆ f ⁻¹' (f '' s) := by
   use x, xs
 
 example : f '' s ⊆ v ↔ s ⊆ f ⁻¹' v := by
-  sorry
+  constructor
+  · intro h x xs
+    simp at h
+    apply h at xs
+    exact xs
+  · intro h x xfs
+    simp at xfs
+    rcases xfs with ⟨ y, g⟩
+    rw [← g.2]
+    apply h
+    exact g.1
 
 example (h : Injective f) : f ⁻¹' (f '' s) ⊆ s := by
-  sorry
+  intro x g
+  rcases g with ⟨ a, b⟩
+  have k : a = x := by
+    apply h; exact b.2
+  rw [← k]
+  exact b.1
 
 example : f '' (f ⁻¹' u) ⊆ u := by
-  sorry
+  intro x g
+  rcases g with ⟨ a,b⟩
+  simp at b
+  rw [← b.2]
+  exact b.1
 
 example (h : Surjective f) : u ⊆ f '' (f ⁻¹' u) := by
-  sorry
+  intro x g
+  have h : ∃ a : α, (f a =x) := by
+    apply h
+  rcases h with ⟨ a, k⟩
+  simp
+  use a
+  constructor
+  · rw [k]
+    exact g
+  · exact k
 
 example (h : s ⊆ t) : f '' s ⊆ f '' t := by
-  sorry
+  intro x h
+  rcases h with ⟨ w, g⟩
+  use w
+  constructor
+  · apply h
+    exact g.1
+  · exact g.2
 
 example (h : u ⊆ v) : f ⁻¹' u ⊆ f ⁻¹' v := by
-  sorry
+  intro x g
+  simp; simp at g
+  apply h
+  exact g
 
 example : f ⁻¹' (u ∪ v) = f ⁻¹' u ∪ f ⁻¹' v := by
-  sorry
+  simp
 
 example : f '' (s ∩ t) ⊆ f '' s ∩ f '' t := by
-  sorry
+  intro x h
+  rcases h with ⟨ y, g⟩
+  constructor
+  · use y
+    exact ⟨ g.1.1, g.2⟩
+  · use y
+    exact ⟨ g.1.2, g.2⟩
+
 
 example (h : Injective f) : f '' s ∩ f '' t ⊆ f '' (s ∩ t) := by
   sorry
@@ -106,6 +150,8 @@ open Set Real
 
 example : InjOn log { x | x > 0 } := by
   intro x xpos y ypos
+  simp at xpos
+  simp at ypos
   intro e
   -- log x = log y
   calc
@@ -123,12 +169,31 @@ example : range exp = { y | y > 0 } := by
   rw [exp_log ypos]
 
 example : InjOn sqrt { x | x ≥ 0 } := by
-  sorry
+  intro x xpos y ypos
+  intro sqrts
+  calc
+    x = (sqrt x)^2 := by rw [sq_sqrt xpos]
+    _ = (sqrt y)^2 := by rw [sqrts]
+    _ = y := by rw [sq_sqrt ypos]
 
 example : InjOn (fun x ↦ x ^ 2) { x : ℝ | x ≥ 0 } := by
-  sorry
+  intro x xpos y ypos
+  simp
+  intro h
+  calc
+    x = sqrt (x^2) := by rw [sqrt_sq xpos]
+    _ = sqrt (y^2) := by rw [h]
+    _ = y := by rw [sqrt_sq ypos]
+
 
 example : sqrt '' { x | x ≥ 0 } = { y | y ≥ 0 } := by
+  ext x
+  constructor
+  · intro h
+    simp
+    simp at h
+    rcases h with ⟨ y, g⟩
+    sorry
   sorry
 
 example : (range fun x ↦ x ^ 2) = { y : ℝ | y ≥ 0 } := by
