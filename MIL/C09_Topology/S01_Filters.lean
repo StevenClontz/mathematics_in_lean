@@ -6,15 +6,54 @@ open Set Filter Topology
 def principal {α : Type*} (s : Set α) : Filter α
     where
   sets := { t | s ⊆ t }
-  univ_sets := sorry
-  sets_of_superset := sorry
-  inter_sets := sorry
+  univ_sets := by
+    simp
+  sets_of_superset := by
+    intro x y h
+    simp at h
+    intro g
+    simp
+    intro z zins
+    apply g
+    apply h
+    assumption
+  inter_sets := by
+    intro x y h g
+    simp
+    simp at h
+    simp at g
+    exact ⟨ h,g⟩
 
 example : Filter ℕ :=
   { sets := { s | ∃ a, ∀ b, a ≤ b → b ∈ s }
-    univ_sets := sorry
-    sets_of_superset := sorry
-    inter_sets := sorry }
+    univ_sets := by
+      simp
+    sets_of_superset := by
+      intro x y h g
+      simp at h
+      simp
+      rcases h with ⟨ a,h⟩
+      use a
+      intro b
+      have h : a≤ b → b∈ x := by
+        apply h
+      intro k
+      apply g
+      exact h k
+    inter_sets := by
+      intro x y h g
+      simp at *
+      rcases h with ⟨ b_x, h⟩
+      rcases g with ⟨ b_y, g⟩
+      use max b_x b_y
+      simp
+      intro b bxb byb
+      constructor
+      · apply h
+        exact bxb
+      · apply g
+        exact byb
+     }
 
 def Tendsto₁ {X Y : Type*} (f : X → Y) (F : Filter X) (G : Filter Y) :=
   ∀ V ∈ G, f ⁻¹' V ∈ F
@@ -32,9 +71,16 @@ example {X Y : Type*} (f : X → Y) (F : Filter X) (G : Filter Y) :
   (@Filter.map_map :
     ∀ {α β γ} {f : Filter α} {m : α → β} {m' : β → γ}, map m' (map m f) = map (m' ∘ m) f)
 
-example {X Y Z : Type*} {F : Filter X} {G : Filter Y} {H : Filter Z} {f : X → Y} {g : Y → Z}
-    (hf : Tendsto₁ f F G) (hg : Tendsto₁ g G H) : Tendsto₁ (g ∘ f) F H :=
-  sorry
+example {X Y Z : Type*} {F : Filter X} {G : Filter Y} {H : Filter Z}
+    {f : X → Y} {g : Y → Z}
+    (hf : Tendsto₁ f F G) (hg : Tendsto₁ g G H) : Tendsto₁ (g ∘ f) F H := by
+  intro V VinH
+  rw [Tendsto₁] at *
+  apply hg at VinH
+  apply hf at VinH
+  rw [preimage] at *
+  simp at *
+  exact VinH
 
 variable (f : ℝ → ℝ) (x₀ y₀ : ℝ)
 
@@ -56,8 +102,17 @@ example : 𝓝 (x₀, y₀) = 𝓝 x₀ ×ˢ 𝓝 y₀ :=
 
 example (f : ℕ → ℝ × ℝ) (x₀ y₀ : ℝ) :
     Tendsto f atTop (𝓝 (x₀, y₀)) ↔
-      Tendsto (Prod.fst ∘ f) atTop (𝓝 x₀) ∧ Tendsto (Prod.snd ∘ f) atTop (𝓝 y₀) :=
-  sorry
+      Tendsto (Prod.fst ∘ f) atTop (𝓝 x₀) ∧
+      Tendsto (Prod.snd ∘ f) atTop (𝓝 y₀) := by
+  calc
+    Tendsto f atTop (𝓝 (x₀, y₀)) ↔ map f atTop ≤ 𝓝 (x₀, y₀) := Iff.rfl
+    _ ↔ map f atTop ≤ 𝓝 x₀ ×ˢ 𝓝 y₀ := by rw [nhds_prod_eq]
+    _ ↔ map f atTop ≤ comap Prod.fst (𝓝 x₀) ⊓ comap Prod.snd (𝓝 y₀) := Iff.rfl
+    _ ↔ map f atTop ≤ comap Prod.fst (𝓝 x₀) ∧ map f atTop ≤ comap Prod.snd (𝓝 y₀) := le_inf_iff
+    _ ↔ map Prod.fst (map f atTop) ≤ 𝓝 x₀ ∧ map Prod.snd (map f atTop) ≤ 𝓝 y₀ := by
+      rw [← map_le_iff_le_comap, ← map_le_iff_le_comap]
+    _ ↔ map (Prod.fst ∘ f) atTop ≤ 𝓝 x₀ ∧ map (Prod.snd ∘ f) atTop ≤ 𝓝 y₀ := by
+      rw [map_map, map_map]
 
 example (x₀ : ℝ) : HasBasis (𝓝 x₀) (fun ε : ℝ ↦ 0 < ε) fun ε ↦ Ioo (x₀ - ε) (x₀ + ε) :=
   nhds_basis_Ioo_pos x₀
@@ -102,4 +157,3 @@ example (P Q R : ℕ → Prop) (hP : ∀ᶠ n in atTop, P n) (hQ : ∀ᶠ n in a
 example (u : ℕ → ℝ) (M : Set ℝ) (x : ℝ) (hux : Tendsto u atTop (𝓝 x))
     (huM : ∀ᶠ n in atTop, u n ∈ M) : x ∈ closure M :=
   sorry
-
