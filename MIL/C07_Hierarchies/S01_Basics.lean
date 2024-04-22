@@ -113,11 +113,20 @@ example {M : Type} [Monoid₁ M] {a b c : M} (hba : b ⋄ a = 𝟙) (hac : a ⋄
   rw [← one_dia c, ← hba, dia_assoc, hac, dia_one b]
 
 
-lemma inv_eq_of_dia [Group₁ G] {a b : G} (h : a ⋄ b = 𝟙) : a⁻¹ = b :=
-  sorry
+lemma inv_eq_of_dia [Group₁ G] {a b : G} (h : a ⋄ b = 𝟙) : a⁻¹ = b := by
+  have : a⁻¹ = a⁻¹ ⋄ (a ⋄ b) := by
+    rw [h, dia_one]
+  rw [← dia_assoc, inv_dia, one_dia] at this
+  exact this
 
-lemma dia_inv [Group₁ G] (a : G) : a ⋄ a⁻¹ = 𝟙 :=
-  sorry
+lemma inv_inv_dia [Group₁ G] (a : G) : a⁻¹⁻¹ = a := by
+  rw [← dia_one a⁻¹⁻¹]
+  rw [← inv_dia a, ← dia_assoc, inv_dia, one_dia]
+
+lemma dia_inv [Group₁ G] (a : G) : a ⋄ a⁻¹ = 𝟙 := by
+  nth_rewrite 1 [← inv_inv_dia a]
+  rw [inv_dia]
+
 
 
 
@@ -173,8 +182,12 @@ attribute [simp] Group₃.inv_mul AddGroup₃.neg_add
 
 
 @[to_additive]
-lemma inv_eq_of_mul [Group₃ G] {a b : G} (h : a * b = 1) : a⁻¹ = b :=
-  sorry
+lemma inv_eq_of_mul [Group₃ G] {a b : G} (h : a * b = 1) : a⁻¹ = b := by
+  have : a⁻¹ = a⁻¹ * (a * b) := by
+    rw [h, mul_one]
+  rw [← mul_assoc₃, Group₃.inv_mul, one_mul] at this
+  exact this
+
 
 
 @[to_additive (attr := simp)]
