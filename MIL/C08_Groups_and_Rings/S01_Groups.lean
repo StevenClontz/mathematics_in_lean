@@ -86,13 +86,33 @@ def conjugate {G : Type*} [Group G] (x : G) (H : Subgroup G) : Subgroup G where
   carrier := {a : G | ∃ h, h ∈ H ∧ a = x * h * x⁻¹}
   one_mem' := by
     dsimp
-    sorry
+    use 1
+    constructor
+    · apply H.one_mem'
+    · rw [mul_one, mul_right_inv]
   inv_mem' := by
     dsimp
-    sorry
+    intro y hyp
+    rcases hyp with ⟨ h, ⟨ hH, yxhxi⟩ ⟩
+    use h⁻¹
+    constructor
+    · apply H.inv_mem'
+      simp; exact hH
+    · rw [yxhxi]
+      exact conj_inv
   mul_mem' := by
     dsimp
-    sorry
+    intro a b hyp
+    rcases hyp with ⟨h₀, ⟨ h₀H, axh₀xi⟩ ⟩
+    intro hyp
+    rcases hyp with ⟨ h₁,⟨ h₁H,bxh₁xi⟩ ⟩
+    use h₀ * h₁
+    constructor
+    · apply H.mul_mem'
+      simp; exact h₀H
+      simp; exact h₁H
+    · rw [axh₀xi, bxh₁xi]
+      simp
 
 example {G H : Type*} [Group G] [Group H] (G' : Subgroup G) (f : G →* H) : Subgroup H :=
   Subgroup.map f G'
