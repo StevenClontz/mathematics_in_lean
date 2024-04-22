@@ -137,23 +137,39 @@ variable {G H : Type*} [Group G] [Group H]
 open Subgroup
 
 example (φ : G →* H) (S T : Subgroup H) (hST : S ≤ T) : comap φ S ≤ comap φ T := by
-  sorry
+  intro x xcophiS
+  apply hST at xcophiS
+  exact xcophiS
 
 example (φ : G →* H) (S T : Subgroup G) (hST : S ≤ T) : map φ S ≤ map φ T := by
-  sorry
+  intro x xmapphiS
+  simp
+  simp at xmapphiS
+  rcases xmapphiS with ⟨ x, hyp⟩
+  use x
+  exact ⟨hST hyp.1,hyp.2 ⟩
 
 variable {K : Type*} [Group K]
 
 -- Remember you can use the `ext` tactic to prove an equality of subgroups.
 example (φ : G →* H) (ψ : H →* K) (U : Subgroup K) :
     comap (ψ.comp φ) U = comap φ (comap ψ U) := by
-  sorry
+  ext x
+  constructor <;>
+  · intro hyp
+    exact hyp
 
 -- Pushing a subgroup along one homomorphism and then another is equal to
 -- pushing it forward along the composite of the homomorphisms.
 example (φ : G →* H) (ψ : H →* K) (S : Subgroup G) :
     map (ψ.comp φ) S = map ψ (S.map φ) := by
-  sorry
+  ext x
+  constructor <;>
+  · intro hyp
+    simp at hyp
+    simp
+    rcases hyp with ⟨ a, hyp⟩
+    use a
 
 end exercises
 
