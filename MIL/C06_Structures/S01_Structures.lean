@@ -80,15 +80,19 @@ theorem addAlt_comm (a b : Point) : addAlt a b = addAlt b a := by
   ext <;> dsimp
   repeat' apply add_comm
 
-protected theorem add_assoc (a b c : Point) : (a.add b).add c = a.add (b.add c) := by
-  sorry
+protected theorem add_assoc (a b c : Point) :
+    (a.add b).add c = a.add (b.add c) := by
+  ext <;> dsimp
+  repeat' apply add_assoc
 
 def smul (r : ℝ) (a : Point) : Point :=
-  sorry
+  ⟨ r*a.x, r*a.y, r*a.z ⟩
 
 theorem smul_distrib (r : ℝ) (a b : Point) :
     (smul r a).add (smul r b) = smul r (a.add b) := by
-  sorry
+  rw [add, add, smul, smul, smul]
+  ext <;> dsimp
+  repeat' ring
 
 end Point
 
@@ -125,9 +129,53 @@ def midpoint (a b : StandardTwoSimplex) : StandardTwoSimplex
   z_nonneg := div_nonneg (add_nonneg a.z_nonneg b.z_nonneg) (by norm_num)
   sum_eq := by field_simp; linarith [a.sum_eq, b.sum_eq]
 
-def weightedAverage (lambda : Real) (lambda_nonneg : 0 ≤ lambda) (lambda_le : lambda ≤ 1)
-    (a b : StandardTwoSimplex) : StandardTwoSimplex :=
-  sorry
+def weightedAverage (lambda : Real)
+    (lambda_nonneg : 0 ≤ lambda) (lambda_le : lambda ≤ 1)
+    (a b : StandardTwoSimplex) : StandardTwoSimplex where
+  x := lambda*a.x + (1-lambda)*b.x
+  y := lambda*a.y + (1-lambda)*b.y
+  z := lambda*a.z + (1-lambda)*b.z
+  x_nonneg := by
+    have : a.x ≥ 0 := a.x_nonneg
+    have : b.x ≥ 0 := b.x_nonneg
+    have : 1 - lambda ≥ 0 := by linarith
+    apply add_nonneg
+    apply mul_nonneg
+    assumption
+    linarith
+    apply mul_nonneg
+    linarith
+    assumption
+  y_nonneg := by
+    have : a.y ≥ 0 := a.y_nonneg
+    have : b.y ≥ 0 := b.y_nonneg
+    have : 1 - lambda ≥ 0 := by linarith
+    apply add_nonneg
+    apply mul_nonneg
+    assumption
+    linarith
+    apply mul_nonneg
+    linarith
+    assumption
+  z_nonneg := by
+    have : a.z ≥ 0 := a.z_nonneg
+    have : b.z ≥ 0 := b.z_nonneg
+    have : 1 - lambda ≥ 0 := by linarith
+    apply add_nonneg
+    apply mul_nonneg
+    assumption
+    linarith
+    apply mul_nonneg
+    linarith
+    assumption
+  sum_eq := by
+    have : lambda*a.x = lambda*(1-a.y-a.z) := by
+      rw [← a.sum_eq]; ring
+    rw [this]
+    have : (1-lambda)*b.x = (1-lambda)*(1-b.y-b.z) := by
+      rw [← b.sum_eq]; ring
+    rw [this]
+    ring
 
 end
 
@@ -206,4 +254,3 @@ variable (s : StdSimplex)
 #check s.2
 
 end
-
